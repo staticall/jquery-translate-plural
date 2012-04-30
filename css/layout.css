@@ -54,6 +54,7 @@ div.wrapper {
   background-clip: padding-box;
   text-align: center;
   margin: 5px auto;
+  margin-top: 50px;
   min-width: 500px;
   width: 500px;
   max-width: 500px;
