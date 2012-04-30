@@ -71,7 +71,7 @@ var TRANSLATE = new function()
   this._ = function(text, count, locale)
   {
     if(!self.isVarDefined(text)) throw 'Can not translate empty string';
-    if(!self.isVarDefined(count)) count = -1;
+    if(count == -1 || count == null || typeof count == 'undefined') count = -1;
     else count = count - 0;
     if(!self.isVarDefined(locale)) locale = self.getLocale();
 
