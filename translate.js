@@ -1,3 +1,10 @@
+/**
+ * Translation class with Plural support
+ *
+ * @author staticall <staticall AT gmail DOT com>
+ * @url http://github.com/staticall/jquery-translate-plural/
+ */
+
 var TRANSLATE = new function()
 {
   var self = this;
