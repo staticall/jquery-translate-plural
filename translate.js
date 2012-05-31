@@ -9,14 +9,14 @@ var TRANSLATE = new function()
 {
   var self = this;
 
-  this.is_debug = true;
+  this.is_debug = false;
   this.locale = null;
   this.plural_forms = function(n){};
   this.phrases = {};
 
   this.init = function(locale_or_phrases, phrases)
   {
-    self.log('TRANSLATE.init('+ locale_or_phrases.toString() +', '+ phrases.toString() +') - method called');
+    self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - method called');
     if(!self.isVarDefined(locale_or_phrases)) throw 'Data must be defined for initialization';
 
     try
@@ -26,10 +26,21 @@ var TRANSLATE = new function()
       if(json.locale)
       {
         self.setLocale(json.locale);
+
+        if(typeof json.phrases != 'undefined')
+        {
+          self.addLocalePhrases(json.phrases);
+        }
+        else if(json.strings != 'undefined')
+        {
+          self.addLocalePhrases(json.strings);
+        }
+
+        return true;
       }
       else
       {
-        self.log('TRANSLATE.init('+ locale_or_phrases.toString() +', '+ phrases.toString() +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
+        self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
         throw 'Unknown `locale_or_strings` format';
       }
 
@@ -50,7 +61,7 @@ var TRANSLATE = new function()
       }
       else
       {
-        self.log('TRANSLATE.init('+ locale_or_phrases.toString() +', '+ phrases.toString() +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
+        self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
         throw 'Unknown `locale_or_strings` format';
       }
     }
@@ -59,11 +70,26 @@ var TRANSLATE = new function()
       if(e != 'Unknown `locale_or_strings` format')
       {
         phrases = phrases;
-        self.setLocale(locale_or_phrases);
+
+        if(typeof locale_or_phrases == 'object')
+        {
+          try
+          {
+            self.setLocale(locale_or_phrases.locale);
+            phrases = locale_or_phrases.phrases;
+          }
+          catch(e)
+          {
+          }
+        }
+        else
+        {
+          self.setLocale(locale_or_phrases);
+        }
       }
       else
       {
-        self.log('TRANSLATE.init('+ locale_or_phrases.toString() +', '+ phrases.toString() +') - class not initialized, required data is missing');
+        self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - class not initialized, required data is missing');
         throw 'Class not initialized, required data is missing';
       }
     }
@@ -72,7 +98,7 @@ var TRANSLATE = new function()
 
     self.setPluralForms(self.getPluralFormByLocale());
 
-    self.log('TRANSLATE.init('+ locale_or_phrases.toString() +', '+ phrases.toString() +') - return: null');
+    self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - return: null');
   }
 
   this._ = function(text, count, locale)
@@ -82,7 +108,9 @@ var TRANSLATE = new function()
     else count = count - 0;
     if(!self.isVarDefined(locale)) locale = self.getLocale();
 
-    self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - method called');
+    var result = '';
+
+    self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - method called');
 
     var phrase_plural;
 
@@ -92,29 +120,35 @@ var TRANSLATE = new function()
 
       try
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - trying get correct plural form, result: '+ self.phrases[locale][text][phrase_plural], 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying get correct plural form, result: '+ self.phrases[locale][text][phrase_plural], 'debug');
 
-        return self.phrases[locale][text][phrase_plural];
+        result = self.phrases[locale][text][phrase_plural];
+        if(typeof result == 'undefined') return text;
+
+        return result;
       }
       catch(e)
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - exception catched, message is not plural', 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - exception catched, message is not plural', 'debug');
 
         return text;
       }
     }
 
-    if(typeof self.phrases[locale][text] == 'object')
+    if(typeof self.phrases[locale] == 'object' && typeof self.phrases[locale][text] == 'object')
     {
       try
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - trying to get first array element, result: '+ self.phrases[locale][text][0], 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying to get first array element, result: '+ self.phrases[locale][text][0], 'debug');
 
-        return self.phrases[locale][text][0];
+        result = self.phrases[locale][text][0];
+        if(typeof result == 'undefined') return text;
+
+        return result;
       }
       catch(e)
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - exception catched, first element of array not exists', 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - exception catched, first element of array not exists', 'debug');
 
         return text;
       }
@@ -123,13 +157,16 @@ var TRANSLATE = new function()
     {
       try
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - trying to get phrase, result: '+ self.phrases[locale][text], 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying to get phrase, result: '+ self.phrases[locale][text], 'debug');
 
-        return self.phrases[locale][text];
+        result = self.phrases[locale][text];
+        if(typeof result == 'undefined') return text;
+
+        return result;
       }
       catch(e)
       {
-        self.log('TRANSLATE._('+ text.toString() +', '+ count.toString() +', '+ locale.toString() +') - exception catched, phrase not exists', 'debug');
+        self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - exception catched, phrase not exists', 'debug');
 
         return text;
       }
@@ -144,7 +181,7 @@ var TRANSLATE = new function()
   this.addLocalePhrases = function(phrases, locale)
   {
     if(!self.isVarDefined(locale)) locale = self.getLocale();
-    self.log('TRANSLATE.addLocalePhrases('+ phrases.toString() +', '+ locale.toString() +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
+    self.log('TRANSLATE.addLocalePhrases('+ phrases +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(phrases, locale);
   }
@@ -156,11 +193,11 @@ var TRANSLATE = new function()
 
   this.setLocale = function(locale)
   {
-    self.log('TRANSLATE.setLocale('+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.setLocale('+ locale +') - method called', 'debug');
 
     if(!self.isVarDefined(locale))
     {
-      self.log('TRANSLATE.setLocale('+ locale.toString() +') - locale not defined or null', 'debug');
+      self.log('TRANSLATE.setLocale('+ locale +') - locale not defined or null', 'debug');
       throw 'Locale must be defined';
     }
 
@@ -181,30 +218,30 @@ var TRANSLATE = new function()
 
     if(!self.validateLocaleString(locale))
     {
-      self.log('TRANSLATE.setLocale('+ locale.toString() +') - incorrect locale passed', 'debug');
+      self.log('TRANSLATE.setLocale('+ locale +') - incorrect locale passed', 'debug');
       throw "Parsed locale invalid, string must be 2 chars in length. Trying validate '"+ locale +"'";
     }
 
     self.locale = locale;
 
-    self.log('TRANSLATE.setLocale('+ locale.toString() +') - result: '+ locale.toString(), 'debug');
+    self.log('TRANSLATE.setLocale('+ locale +') - result: '+ locale, 'debug');
 
     return locale;
   }
 
   this.getPhrases = function(locale)
   {
-    self.log('TRANSLATE.getPhrases('+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.getPhrases('+ locale +') - method called', 'debug');
 
     if(self.isVarDefined(locale))
     {
-      self.log('TRANSLATE.getPhrases('+ locale.toString() +') - result: '+ self.phrases[locale].toString(), 'debug');
+      self.log('TRANSLATE.getPhrases('+ locale +') - result: '+ self.phrases[locale], 'debug');
 
       return self.phrases[locale];
     }
     else
     {
-      self.log('TRANSLATE.getPhrases() - result: '+ self.phrases.toString(), 'debug');
+      self.log('TRANSLATE.getPhrases() - result: '+ self.phrases, 'debug');
 
       return self.phrases;
     }
@@ -212,11 +249,11 @@ var TRANSLATE = new function()
 
   this.setPhrases = function(phrases, locale)
   {
-    self.log('TRANSLATE.setPhrases('+ phrases.toString() +', '+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - method called', 'debug');
 
     if(!self.isVarDefined(phrases))
     {
-      self.log('TRANSLATE.setPhrases('+ phrases.toString() +', '+ locale.toString() +') - phrases not defined', 'debug');
+      self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - phrases not defined', 'debug');
       throw 'Phrases must be defined';
     }
 
@@ -225,46 +262,60 @@ var TRANSLATE = new function()
       locale = self.getLocale();
     }
 
-    try
+    if(typeof phrases == 'object')
     {
-      phrases = $.parseJSON(phrases);
       self.phrases[locale] = phrases;
     }
-    catch(e)
+    else
     {
-      self.log('TRANSLATE.setPhrases('+ phrases.toString() +', '+ locale.toString() +') - incorrect phrases format', 'debug');
-      throw 'Phrases must be in JSON format';
+      try
+      {
+        phrases = $.parseJSON(phrases);
+        self.phrases[locale] = phrases;
+      }
+      catch(e)
+      {
+        if(typeof phrases != 'object')
+        {
+          self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - incorrect phrases format', 'debug');
+          throw 'Phrases must be in JSON format';
+        }
+        else
+        {
+          self.phrases[locale] = phrases;
+        }
+      }
     }
 
-    self.log('TRANSLATE.setPhrases('+ phrases.toString() +', '+ locale.toString() +') - result: '+ phrases.toString(), 'debug');
+    self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - result: '+ phrases, 'debug');
 
     return phrases;
   }
 
   this.getMessages = function(locale)
   {
-    self.log('TRANSLATE.getMessages('+ locale.toString() +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
+    self.log('TRANSLATE.getMessages('+ locale +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
 
     return self.getPhrases(locale);
   }
 
   this.setMessages = function(messages, locale)
   {
-    self.log('TRANSLATE.setMessages('+ messages.toString() +', '+ locale.toString() +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
+    self.log('TRANSLATE.setMessages('+ messages +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(messages, locale);
   }
 
   this.getStrings = function(locale)
   {
-    self.log('TRANSLATE.getStrings('+ locale.toString() +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
+    self.log('TRANSLATE.getStrings('+ locale +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
 
     return self.getPhrases(locale);
   }
 
   this.setStrings = function(strings, locale)
   {
-    self.log('TRANSLATE.setStrings('+ strings.toString() +', '+ locale.toString() +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
+    self.log('TRANSLATE.setStrings('+ strings +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(strings, locale);
   }
@@ -272,7 +323,7 @@ var TRANSLATE = new function()
   this.getPluralForm = function(n, locale)
   {
     if(!self.isVarDefined(locale)) locale = self.getLocale();
-    self.log('TRANSLATE.getPluralForm('+ n.toString() +', '+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.getPluralForm('+ n +', '+ locale +') - method called', 'debug');
 
     var plural_form = self.plural_forms;
 
@@ -283,18 +334,18 @@ var TRANSLATE = new function()
 
     plural_form = plural_form(n);
 
-    self.log('TRANSLATE.getPluralForm('+ n.toString() +', '+ locale.toString() +') - result: '+ plural_form.toString(), 'debug');
+    self.log('TRANSLATE.getPluralForm('+ n +', '+ locale +') - result: '+ plural_form, 'debug');
 
     return plural_form;
   }
 
   this.setPluralForms = function(plural_form)
   {
-    self.log('TRANSLATE.getPluralForm('+ plural_form.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.getPluralForm('+ plural_form +') - method called', 'debug');
 
     if(!self.isVarDefined(plural_form))
     {
-      self.log('TRANSLATE.getPluralForm('+ plural_form.toString() +') - Plural Form undefined, result: false', 'debug');
+      self.log('TRANSLATE.getPluralForm('+ plural_form +') - Plural Form undefined, result: false', 'debug');
       throw 'Plural forms must be defined';
 
       return false;
@@ -305,7 +356,7 @@ var TRANSLATE = new function()
       self.plural_forms = plural_form;
     }
 
-    self.log('TRANSLATE.getPluralForm('+ plural_form.toString() +') - result: true', 'debug');
+    self.log('TRANSLATE.getPluralForm('+ plural_form +') - result: true', 'debug');
 
     return true;
   }
@@ -315,11 +366,11 @@ var TRANSLATE = new function()
     if(!self.isVarDefined(is_set)) is_set = true;
     if(!self.isVarDefined(locale)) locale = self.getLocale();
 
-    self.log('TRANSLATE.getPluralFormByLocale('+ is_set.toString() +', '+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - method called', 'debug');
 
     if(!self.isVarDefined(locale))
     {
-      self.log('TRANSLATE.getPluralFormByLocale('+ is_set.toString() +', '+ locale.toString() +') - locale undefined, result: '+ locale.toString(), 'debug');
+      self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - locale undefined, result: '+ locale, 'debug');
       throw 'Locale required for Plural Form generation';
     }
 
@@ -498,20 +549,20 @@ var TRANSLATE = new function()
           };
         break;
       default:
-          self.log('TRANSLATE.getPluralFormByLocale('+ is_set.toString() +', '+ locale.toString() +') - Plural Form for `'+ locale.toString() +'` is unknown', 'debug');
+          self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - Plural Form for `'+ locale +'` is unknown', 'debug');
           throw 'Plural Form for selected locale is unknown. Locale - '+ locale;
         break;
     }
 
     if(is_set) self.setPluralForms(_func);
-    self.log('TRANSLATE.getPluralFormByLocale('+ is_set.toString() +', '+ locale.toString() +') - result: '+ _func.toString(), 'debug');
+    self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - result: '+ _func, 'debug');
 
     return _func;
   }
 
   this.validateLocaleString = function(locale)
   {
-    self.log('TRANSLATE.validateLocaleString('+ locale.toString() +') - method called', 'debug');
+    self.log('TRANSLATE.validateLocaleString('+ locale +') - method called', 'debug');
 
     if(!self.isVarDefined(locale)) return false;
 
@@ -530,13 +581,13 @@ var TRANSLATE = new function()
 
       if(chars.indexOf(current_char) == -1)
       {
-        self.log('TRANSLATE.validateLocaleString('+ locale.toString() +') - result: false', 'debug');
+        self.log('TRANSLATE.validateLocaleString('+ locale +') - result: false', 'debug');
 
         return false;
       }      
 	}
 
-    self.log('TRANSLATE.validateLocaleString('+ locale.toString() +') - result: true', 'debug');
+    self.log('TRANSLATE.validateLocaleString('+ locale +') - result: true', 'debug');
 
 	return true;
   }
