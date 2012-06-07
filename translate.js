@@ -584,7 +584,7 @@ var TRANSLATE = new function()
         self.log('TRANSLATE.validateLocaleString('+ locale +') - result: false', 'debug');
 
         return false;
-      }      
+      }
 	}
 
     self.log('TRANSLATE.validateLocaleString('+ locale +') - result: true', 'debug');
@@ -635,7 +635,7 @@ var TRANSLATE = new function()
 
     var log_types = self.getLogTypes();
 
-    if(typeof type == 'undefined' || !$.inArray(type, log_types)) type = 'log';
+    if(typeof type == 'undefined' || $.inArray(type, log_types) == -1) type = 'log';
 
     if(typeof console != 'undefined' && typeof console[type] == 'function')
     {
