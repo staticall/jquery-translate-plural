@@ -9,15 +9,19 @@ var TRANSLATE = new function()
 {
   var self = this;
 
-  this.is_debug = false;
-  this.locale = null;
+  this.is_debug     = false;
+  this.locale       = null;
   this.plural_forms = function(n){};
-  this.phrases = {};
+  this.phrases      = {};
 
   this.init = function(locale_or_phrases, phrases)
   {
     self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - method called');
-    if(!self.isVarDefined(locale_or_phrases)) throw 'Data must be defined for initialization';
+
+    if(!self.isVarDefined(locale_or_phrases))
+    {
+      throw 'Data must be defined for initialization';
+    }
 
     try
     {
@@ -27,55 +31,35 @@ var TRANSLATE = new function()
       {
         self.setLocale(json.locale);
 
-        if(typeof json.phrases != 'undefined')
+        if(typeof json.phrases !== 'undefined')
         {
           self.addLocalePhrases(json.phrases);
         }
-        else if(json.strings != 'undefined')
+        else if(json.strings !== 'undefined')
         {
           self.addLocalePhrases(json.strings);
+        }
+        else if(json.messages !== 'undefined')
+        {
+          self.addLocalePhrases(json.messages);
         }
 
         return true;
       }
-      else
-      {
-        self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
-        throw 'Unknown `locale_or_strings` format';
-      }
 
-      if(json.strings || json.phrases)
-      {
-        var messages;
-
-        if(json.strings)
-        {
-          messages = json.strings;
-        }
-        else
-        {
-          messages = json.phrases;
-        }
-
-        phrases = messages;
-      }
-      else
-      {
-        self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
-        throw 'Unknown `locale_or_strings` format';
-      }
+      self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - Unknown format of locale_or_strings variable, value: `'+ locale_or_phrases +'`');
+      throw 'Unknown `locale_or_strings` format';
     }
     catch(e)
     {
-      if(e != 'Unknown `locale_or_strings` format')
+      if(e !== 'Unknown `locale_or_strings` format')
       {
-        phrases = phrases;
-
-        if(typeof locale_or_phrases == 'object')
+        if(typeof locale_or_phrases === 'object')
         {
           try
           {
             self.setLocale(locale_or_phrases.locale);
+
             phrases = locale_or_phrases.phrases;
           }
           catch(e)
@@ -99,14 +83,28 @@ var TRANSLATE = new function()
     self.setPluralForms(self.getPluralFormByLocale());
 
     self.log('TRANSLATE.init('+ locale_or_phrases +', '+ phrases +') - return: null');
-  }
+  };
 
   this._ = function(text, count, locale)
   {
-    if(!self.isVarDefined(text)) throw 'Can not translate empty string';
-    if(count == -1 || count == null || typeof count == 'undefined' || isNaN(count)) count = -1;
-    else count = count - 0;
-    if(!self.isVarDefined(locale)) locale = self.getLocale();
+    if(!self.isVarDefined(text))
+    {
+      throw 'Can not translate empty string';
+    }
+
+    if(count === -1 || count === null || typeof count === 'undefined' || isNaN(count))
+    {
+      count = -1;
+    }
+    else
+    {
+      count = count - 0;
+    }
+
+    if(!self.isVarDefined(locale))
+    {
+      locale = self.getLocale();
+    }
 
     var result = '';
 
@@ -114,7 +112,7 @@ var TRANSLATE = new function()
 
     var phrase_plural;
 
-    if(count != -1)
+    if(count !== -1)
     {
       phrase_plural = self.getPluralForm(count, locale);
 
@@ -123,7 +121,11 @@ var TRANSLATE = new function()
         self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying get correct plural form, result: '+ self.phrases[locale][text][phrase_plural], 'debug');
 
         result = self.phrases[locale][text][phrase_plural];
-        if(typeof result == 'undefined') return text;
+
+        if(typeof result === 'undefined')
+        {
+          return text;
+        }
 
         return result;
       }
@@ -135,14 +137,18 @@ var TRANSLATE = new function()
       }
     }
 
-    if(typeof self.phrases[locale] == 'object' && typeof self.phrases[locale][text] == 'object')
+    if(typeof self.phrases[locale] === 'object' && typeof self.phrases[locale][text] === 'object')
     {
       try
       {
         self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying to get first array element, result: '+ self.phrases[locale][text][0], 'debug');
 
         result = self.phrases[locale][text][0];
-        if(typeof result == 'undefined') return text;
+
+        if(typeof result === 'undefined')
+        {
+          return text;
+        }
 
         return result;
       }
@@ -160,7 +166,11 @@ var TRANSLATE = new function()
         self.log('TRANSLATE._('+ text +', '+ count +', '+ locale +') - trying to get phrase, result: '+ self.phrases[locale][text], 'debug');
 
         result = self.phrases[locale][text];
-        if(typeof result == 'undefined') return text;
+
+        if(typeof result === 'undefined')
+        {
+          return text;
+        }
 
         return result;
       }
@@ -171,25 +181,29 @@ var TRANSLATE = new function()
         return text;
       }
     }
-  }
+  };
 
   this.translate = function(text, count, locale)
   {
     return self._(text, count, locale);
-  }
+  };
 
   this.addLocalePhrases = function(phrases, locale)
   {
-    if(!self.isVarDefined(locale)) locale = self.getLocale();
+    if(!self.isVarDefined(locale))
+    {
+      locale = self.getLocale();
+    }
+
     self.log('TRANSLATE.addLocalePhrases('+ phrases +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(phrases, locale);
-  }
+  };
 
   this.getLocale = function()
   {
     return self.locale;
-  }
+  };
 
   this.setLocale = function(locale)
   {
@@ -203,14 +217,14 @@ var TRANSLATE = new function()
 
     var loc;
 
-    if(locale.indexOf('-') != -1)
+    if(locale.indexOf('-') !== -1)
     {
-      loc = locale.split('-');
+      loc    = locale.split('-');
       locale = loc[0];
     }
-    else if(locale.indexOf('_') != -1)
+    else if(locale.indexOf('_') !== -1)
     {
-      loc = locale.split('_');
+      loc    = locale.split('_');
       locale = loc[0];
     }
 
@@ -227,7 +241,7 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.setLocale('+ locale +') - result: '+ locale, 'debug');
 
     return locale;
-  }
+  };
 
   this.getPhrases = function(locale)
   {
@@ -239,13 +253,11 @@ var TRANSLATE = new function()
 
       return self.phrases[locale];
     }
-    else
-    {
-      self.log('TRANSLATE.getPhrases() - result: '+ self.phrases, 'debug');
 
-      return self.phrases;
-    }
-  }
+    self.log('TRANSLATE.getPhrases() - result: '+ self.phrases, 'debug');
+
+    return self.phrases;
+  };
 
   this.setPhrases = function(phrases, locale)
   {
@@ -262,7 +274,7 @@ var TRANSLATE = new function()
       locale = self.getLocale();
     }
 
-    if(typeof phrases == 'object')
+    if(typeof phrases === 'object')
     {
       self.phrases[locale] = phrases;
     }
@@ -275,7 +287,7 @@ var TRANSLATE = new function()
       }
       catch(e)
       {
-        if(typeof phrases != 'object')
+        if(typeof phrases !== 'object')
         {
           self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - incorrect phrases format', 'debug');
           throw 'Phrases must be in JSON format';
@@ -290,39 +302,43 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - result: '+ phrases, 'debug');
 
     return phrases;
-  }
+  };
 
   this.getMessages = function(locale)
   {
     self.log('TRANSLATE.getMessages('+ locale +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
 
     return self.getPhrases(locale);
-  }
+  };
 
   this.setMessages = function(messages, locale)
   {
     self.log('TRANSLATE.setMessages('+ messages +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(messages, locale);
-  }
+  };
 
   this.getStrings = function(locale)
   {
     self.log('TRANSLATE.getStrings('+ locale +') - method called. Redirect to TRANSLATE.getPhrases() with same attributes', 'debug');
 
     return self.getPhrases(locale);
-  }
+  };
 
   this.setStrings = function(strings, locale)
   {
     self.log('TRANSLATE.setStrings('+ strings +', '+ locale +') - method called. Redirect to TRANSLATE.setPhrases() with same attributes', 'debug');
 
     return self.setPhrases(strings, locale);
-  }
+  };
 
   this.getPluralForm = function(n, locale)
   {
-    if(!self.isVarDefined(locale)) locale = self.getLocale();
+    if(!self.isVarDefined(locale))
+    {
+      locale = self.getLocale();
+    }
+
     self.log('TRANSLATE.getPluralForm('+ n +', '+ locale +') - method called', 'debug');
 
     var plural_form = self.plural_forms;
@@ -337,7 +353,7 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.getPluralForm('+ n +', '+ locale +') - result: '+ plural_form, 'debug');
 
     return plural_form;
-  }
+  };
 
   this.setPluralForms = function(plural_form)
   {
@@ -351,7 +367,7 @@ var TRANSLATE = new function()
       return false;
     }
 
-    if(typeof plural_form == 'function')
+    if(typeof plural_form === 'function')
     {
       self.plural_forms = plural_form;
     }
@@ -359,12 +375,19 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.getPluralForm('+ plural_form +') - result: true', 'debug');
 
     return true;
-  }
+  };
 
   this.getPluralFormByLocale = function(is_set, locale)
   {
-    if(!self.isVarDefined(is_set)) is_set = true;
-    if(!self.isVarDefined(locale)) locale = self.getLocale();
+    if(!self.isVarDefined(is_set))
+    {
+      is_set = true;
+    }
+
+    if(!self.isVarDefined(locale))
+    {
+      locale = self.getLocale();
+    }
 
     self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - method called', 'debug');
 
@@ -450,7 +473,7 @@ var TRANSLATE = new function()
       case 'zu':
           _func = function(n)
           {
-            return ((n == 1) ? 0 : 1);
+            return ((n === 1) ? 0 : 1);
           };
         break;
       case 'am':
@@ -467,7 +490,7 @@ var TRANSLATE = new function()
       case 'wa':
           _func = function(n)
           {
-            return (((n == 0) || (n == 1)) ? 0 : 1);
+            return (((n === 0) || (n === 1)) ? 0 : 1);
           };
         break;
       case 'be':
@@ -478,99 +501,107 @@ var TRANSLATE = new function()
       case 'uk':
           _func = function(n)
           {
-            return ((n % 10 == 1) && (n % 100 != 11)) ? 0 : (((n % 10 >= 2) && (n % 10 <= 4) && ((n % 100 < 10) || (n % 100 >= 20))) ? 1 : 2);
-          }
+            return ((n % 10 === 1) && (n % 100 !== 11)) ? 0 : (((n % 10 >= 2) && (n % 10 <= 4) && ((n % 100 < 10) || (n % 100 >= 20))) ? 1 : 2);
+          };
         break;
       case 'cs':
       case 'sk':
           _func = function(n)
           {
-            return (n == 1) ? 0 : (((n >= 2) && (n <= 4)) ? 1 : 2);
+            return (n === 1) ? 0 : (((n >= 2) && (n <= 4)) ? 1 : 2);
           };
         break;
       case 'ga':
           _func = function(n)
           {
-            return (n == 1) ? 0 : ((n == 2) ? 1 : 2);
+            return (n === 1) ? 0 : ((n === 2) ? 1 : 2);
           };
         break;
       case 'lt':
           _func = function(n)
           {
-            return ((n % 10 == 1) && (n % 100 != 11)) ? 0 : (((n % 10 >= 2) && ((n % 100 < 10) || (n % 100 >= 20))) ? 1 : 2);
+            return ((n % 10 === 1) && (n % 100 !== 11)) ? 0 : (((n % 10 >= 2) && ((n % 100 < 10) || (n % 100 >= 20))) ? 1 : 2);
           };
         break;
       case 'sl':
           _func = function(n)
           {
-            return (n % 100 == 1) ? 0 : ((n % 100 == 2) ? 1 : (((n % 100 == 3) || (n % 100 == 4)) ? 2 : 3));
+            return (n % 100 === 1) ? 0 : ((n % 100 === 2) ? 1 : (((n % 100 === 3) || (n % 100 === 4)) ? 2 : 3));
           };
         break;
       case 'mk':
           _func = function(n)
           {
-            return ((n % 10 == 1) ? 0 : 1);
+            return ((n % 10 === 1) ? 0 : 1);
           };
         break;
       case 'mt':
           _func = function(n)
           {
-            return (n == 1) ? 0 : (((n == 0) || ((n % 100 > 1) && (n % 100 < 11))) ? 1 : (((n % 100 > 10) && (n % 100 < 20)) ? 2 : 3));
+            return (n === 1) ? 0 : (((n === 0) || ((n % 100 > 1) && (n % 100 < 11))) ? 1 : (((n % 100 > 10) && (n % 100 < 20)) ? 2 : 3));
           };
         break;
       case 'lv':
           _func = function(n)
           {
-            return (n == 0) ? 0 : (((n % 10 == 1) && (n % 100 != 11)) ? 1 : 2);
+            return (n === 0) ? 0 : (((n % 10 === 1) && (n % 100 !== 11)) ? 1 : 2);
           };
         break;
       case 'pl':
           _func = function(n)
           {
-            return (n == 1) ? 0 : (((n % 10 >= 2) && (n % 10 <= 4) && ((n % 100 < 12) || (n % 100 > 14))) ? 1 : 2);
+            return (n === 1) ? 0 : (((n % 10 >= 2) && (n % 10 <= 4) && ((n % 100 < 12) || (n % 100 > 14))) ? 1 : 2);
           };
         break;
       case 'cy':
           _func = function(n)
           {
-            return (n == 1) ? 0 : ((n == 2) ? 1 : (((n == 8) || (n == 11)) ? 2 : 3));
+            return (n === 1) ? 0 : ((n === 2) ? 1 : (((n === 8) || (n === 11)) ? 2 : 3));
           };
         break;
       case 'ro':
           _func = function(n)
           {
-            return (n == 1) ? 0 : (((n == 0) || ((n % 100 > 0) && (n % 100 < 20))) ? 1 : 2);
+            return (n === 1) ? 0 : (((n === 0) || ((n % 100 > 0) && (n % 100 < 20))) ? 1 : 2);
           };
         break;
       case 'ar':
           _func = function(n)
           {
-            return (n == 0) ? 0 : ((n == 1) ? 1 : ((n == 2) ? 2 : (((n >= 3) && (n <= 10)) ? 3 : (((n >= 11) && (n <= 99)) ? 4 : 5))));
+            return (n === 0) ? 0 : ((n === 1) ? 1 : ((n === 2) ? 2 : (((n >= 3) && (n <= 10)) ? 3 : (((n >= 11) && (n <= 99)) ? 4 : 5))));
           };
         break;
       default:
           self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - Plural Form for `'+ locale +'` is unknown', 'debug');
+
           throw 'Plural Form for selected locale is unknown. Locale - '+ locale;
         break;
     }
 
-    if(is_set) self.setPluralForms(_func);
+    if(is_set)
+    {
+      self.setPluralForms(_func);
+    }
+
     self.log('TRANSLATE.getPluralFormByLocale('+ is_set +', '+ locale +') - result: '+ _func, 'debug');
 
     return _func;
-  }
+  };
 
   this.validateLocaleString = function(locale)
   {
     self.log('TRANSLATE.validateLocaleString('+ locale +') - method called', 'debug');
 
-    if(!self.isVarDefined(locale)) return false;
+    if(!self.isVarDefined(locale))
+    {
+      return false;
+    }
 
 	var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 	var str_len = locale.length;
 	var current_char;
 
-    if(str_len != 2)
+    if(str_len !== 2)
     {
       return false;
     }
@@ -579,7 +610,7 @@ var TRANSLATE = new function()
     {
       current_char = locale.charAt(i);
 
-      if(chars.indexOf(current_char) == -1)
+      if(chars.indexOf(current_char) === -1)
       {
         self.log('TRANSLATE.validateLocaleString('+ locale +') - result: false', 'debug');
 
@@ -590,34 +621,44 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.validateLocaleString('+ locale +') - result: true', 'debug');
 
 	return true;
-  }
+  };
 
   this.getDebug = function()
   {
     var is_debug = self.is_debug;
-    if(!self.isVarDefined(is_debug)) is_debug = false;
+
+    if(!self.isVarDefined(is_debug))
+    {
+      is_debug = false;
+    }
 
     return self.is_debug;
-  }
+  };
 
   this.setDebug = function(is_debug)
   {
-    if(!self.isVarDefined(is_debug)) is_debug = false;
+    if(!self.isVarDefined(is_debug))
+    {
+      is_debug = false;
+    }
 
     self.is_debug = is_debug;
 
     self.initLog();
 
     return is_debug;
-  }
+  };
 
   this.initLog = function()
   {
     var is_debug = self.getDebug();
 
-    if(!is_debug) return undefined;
+    if(!is_debug)
+    {
+      return undefined;
+    }
 
-    if(Function.prototype.bind && console && typeof console.log == 'object')
+    if(Function.prototype.bind && console && typeof console.log === 'object')
     {
       self.getLogTypes().forEach(function(method)
       {
@@ -626,26 +667,36 @@ var TRANSLATE = new function()
     }
 
     return true;
-  }
+  };
 
   this.log = function(message, type)
   {
-    if(!self.getDebug()) return;
-    if(!self.isVarDefined(message)) return;
+    if(!self.getDebug())
+    {
+      return;
+    }
+
+    if(!self.isVarDefined(message))
+    {
+      return;
+    }
 
     var log_types = self.getLogTypes();
 
-    if(typeof type == 'undefined' || $.inArray(type, log_types) == -1) type = 'log';
+    if(typeof type === 'undefined' || $.inArray(type, log_types) === -1)
+    {
+      type = 'log';
+    }
 
-    if(typeof console != 'undefined' && typeof console[type] == 'function')
+    if(typeof console !== 'undefined' && typeof console[type] === 'function')
     {
       console[type](message);
     }
-    else if(!Function.prototype.bind && typeof console != 'undefined' && typeof console[type] == 'object')
+    else if(!Function.prototype.bind && typeof console !== 'undefined' && typeof console[type] === 'object')
     {
       Function.prototype.call.call(console[type], console, message);
     }
-  }
+  };
 
   this.getLogTypes = function()
   {
@@ -656,10 +707,10 @@ var TRANSLATE = new function()
       'debug',
       'log'
     ];
-  }
+  };
 
   this.isVarDefined = function(variable)
   {
-    return (variable && variable !== null && typeof variable != 'undefined');
-  }
-}
+    return (variable && variable !== null && typeof variable !== 'undefined');
+  };
+};
