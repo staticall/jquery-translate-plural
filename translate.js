@@ -25,7 +25,12 @@ var TRANSLATE = new function()
 
     try
     {
-      var json = $.parseJSON(locale_or_phrases);
+      var json = locale_or_phrases;
+
+      if(typeof locale_or_phrases === 'string')
+      {
+        json = $.parseJSON(locale_or_phrases);
+      }
 
       if(json.locale)
       {
@@ -266,6 +271,7 @@ var TRANSLATE = new function()
     if(!self.isVarDefined(phrases))
     {
       self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - phrases not defined', 'debug');
+
       throw 'Phrases must be defined';
     }
 
@@ -274,29 +280,39 @@ var TRANSLATE = new function()
       locale = self.getLocale();
     }
 
-    if(typeof phrases === 'object')
-    {
-      self.phrases[locale] = phrases;
-    }
-    else
+    if(typeof phrases === 'string')
     {
       try
       {
         phrases = $.parseJSON(phrases);
-        self.phrases[locale] = phrases;
       }
       catch(e)
       {
-        if(typeof phrases !== 'object')
-        {
-          self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - incorrect phrases format', 'debug');
-          throw 'Phrases must be in JSON format';
-        }
-        else
-        {
-          self.phrases[locale] = phrases;
-        }
       }
+    }
+
+    phrases = self.validatePhrases(phrases);
+
+    if(self.getJsonLength(phrases) === 0)
+    {
+      throw 'Phrases are invalid';
+    }
+
+    try
+    {
+
+      self.phrases[locale] = phrases;
+    }
+    catch(e)
+    {
+      if(typeof phrases !== 'object')
+      {
+        self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - incorrect phrases format', 'debug');
+
+        throw 'Phrases must be in JSON format';
+      }
+
+      self.phrases[locale] = phrases;
     }
 
     self.log('TRANSLATE.setPhrases('+ phrases +', '+ locale +') - result: '+ phrases, 'debug');
@@ -375,6 +391,128 @@ var TRANSLATE = new function()
     self.log('TRANSLATE.getPluralForm('+ plural_form +') - result: true', 'debug');
 
     return true;
+  };
+
+  this.getPluralFormsCountByLocale = function(locale)
+  {
+    if(self.isVarDefined(locale) === false)
+    {
+      locale = self.getLocale();
+    }
+
+    switch(locale)
+    {
+      case 'bo':
+      case 'dz':
+      case 'id':
+      case 'ja':
+      case 'jv':
+      case 'ka':
+      case 'km':
+      case 'kn':
+      case 'ko':
+      case 'ms':
+      case 'th':
+      case 'tr':
+      case 'vi':
+      case 'zh':
+          return 1;
+        break;
+      case 'af':
+      case 'am':
+      case 'az':
+      case 'bh':
+      case 'bn':
+      case 'bg':
+      case 'ca':
+      case 'da':
+      case 'de':
+      case 'el':
+      case 'en':
+      case 'eo':
+      case 'es':
+      case 'et':
+      case 'eu':
+      case 'fa':
+      case 'fi':
+      case 'fil':
+      case 'fo':
+      case 'fr':
+      case 'fur':
+      case 'fy':
+      case 'gl':
+      case 'gu':
+      case 'gun':
+      case 'ha':
+      case 'he':
+      case 'hi':
+      case 'hu':
+      case 'is':
+      case 'it':
+      case 'ku':
+      case 'lb':
+      case 'ln':
+      case 'mg':
+      case 'mk':
+      case 'ml':
+      case 'mn':
+      case 'mr':
+      case 'nah':
+      case 'nb':
+      case 'ne':
+      case 'nl':
+      case 'nn':
+      case 'no':
+      case 'nso':
+      case 'om':
+      case 'or':
+      case 'pa':
+      case 'pap':
+      case 'ps':
+      case 'pt':
+      case 'so':
+      case 'sq':
+      case 'sv':
+      case 'sw':
+      case 'ta':
+      case 'te':
+      case 'ti':
+      case 'tk':
+      case 'ur':
+      case 'xbr':
+      case 'wa':
+      case 'zu':
+          return 2;
+        break;
+      case 'be':
+      case 'bs':
+      case 'cs':
+      case 'ga':
+      case 'hr':
+      case 'lt':
+      case 'lv':
+      case 'pl':
+      case 'ro':
+      case 'ru':
+      case 'sk':
+      case 'sr':
+      case 'uk':
+          return 3;
+        break;
+      case 'cy':
+      case 'mt':
+      case 'sl':
+          return 4;
+        break;
+      case 'ar':
+          return 6;
+        break;
+      default:
+          self.log('TRANSLATE.getPluralFormsCountByLocale('+ locale +') - Plural Form Count for `'+ locale +'` is unknown', 'debug');
+
+          throw 'Plural Form Count for selected locale is unknown. Locale - '+ locale;
+        break;
+    }
   };
 
   this.getPluralFormByLocale = function(is_set, locale)
@@ -623,6 +761,28 @@ var TRANSLATE = new function()
 	return true;
   };
 
+  this.validatePhrases = function(phrases, locale)
+  {
+    if(self.isVarDefined(locale) === false)
+    {
+      locale = self.getLocale();
+    }
+
+    if(typeof phrases !== 'object' || self.getJsonLength(phrases) === 0)
+    {
+      throw 'Either empty json passed or not an object as phrases';
+    }
+
+    $.each(phrases, function(key, phrase_arr){
+      if($.isArray(phrase_arr) === false || phrase_arr.length === 0)
+      {
+        delete phrases[key];
+      }
+    });
+
+    return phrases;
+  };
+
   this.getDebug = function()
   {
     var is_debug = self.is_debug;
@@ -712,5 +872,17 @@ var TRANSLATE = new function()
   this.isVarDefined = function(variable)
   {
     return (variable && variable !== null && typeof variable !== 'undefined');
+  };
+
+  this.getJsonLength = function(json)
+  {
+    var length = 0;
+
+    for(var k in json)
+    {
+      length++;
+    }
+
+    return length;
   };
 };
